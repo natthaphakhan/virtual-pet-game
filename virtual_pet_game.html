@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐾 Virtual Pet Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #5a67d8;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .pet-display {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 20px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pet {
+            font-size: 8em;
+            animation: bounce 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .pet.happy {
+            animation: spin 1s ease-in-out;
+        }
+
+        .pet.tired {
+            opacity: 0.6;
+            animation: sleepy 3s ease-in-out infinite;
+        }
+
+        .pet.hungry {
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-30px);
+            }
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes sleepy {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .stage-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-message {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            max-width: 90%;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat {
+            text-align: left;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .stat-bar {
+            background: #e2e8f0;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .hunger-fill { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+        .energy-fill { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .happiness-fill { background: linear-gradient(45deg, #feca57, #ff9ff3); }
+        .health-fill { background: linear-gradient(45deg, #26de81, #20bf6b); }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .growth-progress {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .progress-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(45deg, #a8edea, #fed6e3);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .game-over {
+            background: rgba(255,0,0,0.1);
+            border: 2px solid #ff4757;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #ff4757, #ff3742);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .achievement {
+            background: linear-gradient(45deg, #ffd700, #ffed4a);
+            color: #333;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            animation: glow 2s ease-in-out;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px #ffd700; }
+            50% { box-shadow: 0 0 20px #ffd700; }
+            100% { box-shadow: 0 0 5px #ffd700; }
+        }
+
+        .sleeping-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,100,0.3);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🐾 Virtual Pet</h1>
+        
+        <div class="pet-display">
+            <div class="stage-info" id="stageInfo">Egg</div>
+            <div class="pet" id="pet">🥚</div>
+            <div class="status-message" id="statusMessage">Your pet is waiting to hatch!</div>
+            <div class="sleeping-overlay" id="sleepingOverlay" style="display: none;">😴💤</div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat">
+                <div class="stat-label">🍖 Hunger</div>
+                <div class="stat-bar">
+                    <div class="stat-fill hunger-fill" id="hungerBar" style="width: 100%">100</div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">⚡ Energy</div>
+                <div class="stat-bar">
+                    <div class="stat-fill energy-fill" id="energyBar" style="width: 100%">100</div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">😊 Happiness</div>
+                <div class="stat-bar">
+                    <div class="stat-fill happiness-fill" id="happinessBar" style="width: 100%">100</div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">❤️ Health</div>
+                <div class="stat-bar">
+                    <div class="stat-fill health-fill" id="healthBar" style="width: 100%">100</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="action-btn" id="feedBtn" onclick="feedPet()">🍖 Feed</button>
+            <button class="action-btn" id="playBtn" onclick="playWithPet()">🎾 Play</button>
+            <button class="action-btn" id="sleepBtn" onclick="toggleSleep()">🛏️ Sleep</button>
+            <button class="action-btn" id="cleanBtn" onclick="cleanPet()">🧼 Clean</button>
+        </div>
+
+        <div class="growth-progress">
+            <div class="progress-label">Growth Progress</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="growthBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="gameOverScreen" class="game-over" style="display: none;">
+            <h3>💔 Game Over!</h3>
+            <p id="gameOverMessage"></p>
+            <button class="restart-btn" onclick="restartGame()">🔄 Start Over</button>
+        </div>
+
+        <div id="achievementArea"></div>
+    </div>
+
+    <script>
+        class VirtualPet {
+            constructor() {
+                this.hunger = 100;
+                this.energy = 100;
+                this.happiness = 100;
+                this.health = 100;
+                this.age = 0;
+                this.stage = "Egg";
+                this.isSleeping = false;
+                this.isAlive = true;
+                this.lastClean = Date.now();
+                this.achievements = new Set();
+                
+                // Stage definitions
+                this.stages = {
+                    "Egg": { emoji: "🥚", ageThreshold: 0, nextStage: "Baby" },
+                    "Baby": { emoji: "🐣", ageThreshold: 50, nextStage: "Child" },
+                    "Child": { emoji: "🐥", ageThreshold: 150, nextStage: "Adult" },
+                    "Adult": { emoji: "🐔", ageThreshold: 300, nextStage: "Elder" },
+                    "Elder": { emoji: "🦅", ageThreshold: 500, nextStage: null }
+                };
+                
+                this.statusMessages = {
+                    happy: ["I'm so happy! 😊", "Life is great! ✨", "Thank you for caring! 💕"],
+                    hungry: ["I'm getting hungry... 🍽️", "Feed me please! 🥺", "My tummy is rumbling! 🍖"],
+                    tired: ["I'm feeling sleepy... 😴", "Need some rest... 💤", "Time for a nap! 🛏️"],
+                    sick: ["I don't feel well... 🤒", "Need better care! 💊", "I'm not feeling good... 😞"],
+                    playing: ["This is fun! 🎉", "Wheee! 🎾", "I love playing! 🎈"],
+                    sleeping: ["Zzz... 😴", "Sweet dreams! 💤", "Sleeping peacefully... 🌙"],
+                    clean: ["I feel so clean! ✨", "Sparkly and fresh! 🌟", "Thanks for cleaning me! 🧼"]
+                };
+            }
+
+            tick() {
+                if (!this.isAlive) return;
+
+                this.age++;
+
+                if (!this.isSleeping) {
+                    this.hunger = Math.max(0, this.hunger - 0.3);
+                    this.energy = Math.max(0, this.energy - 0.2);
+                    this.happiness = Math.max(0, this.happiness - 0.1);
+                } else {
+                    this.energy = Math.min(100, this.energy + 0.8);
+                    this.hunger = Math.max(0, this.hunger - 0.1);
+                }
+
+                // Health calculation based on other stats
+                const avgStat = (this.hunger + this.energy + this.happiness) / 3;
+                if (avgStat < 30) {
+                    this.health = Math.max(0, this.health - 0.5);
+                } else if (avgStat > 70) {
+                    this.health = Math.min(100, this.health + 0.2);
+                }
+
+                // Cleanliness affects health
+                const timeSinceClean = Date.now() - this.lastClean;
+                if (timeSinceClean > 120000) { // 2 minutes
+                    this.health = Math.max(0, this.health - 0.3);
+                    this.happiness = Math.max(0, this.happiness - 0.2);
+                }
+
+                this.checkGrowth();
+                this.checkGameOver();
+                this.checkAchievements();
+            }
+
+            checkGrowth() {
+                const currentStageData = this.stages[this.stage];
+                if (currentStageData.nextStage && this.age >= currentStageData.ageThreshold + 50) {
+                    const oldStage = this.stage;
+                    this.stage = currentStageData.nextStage;
+                    this.showAchievement(`🎉 Evolved to ${this.stage}!`);
+                }
+            }
+
+            checkGameOver() {
+                if (this.health <= 0 || (this.hunger <= 0 && this.energy <= 0 && this.happiness <= 0)) {
+                    this.isAlive = false;
+                    this.showGameOver();
+                }
+            }
+
+            checkAchievements() {
+                if (!this.achievements.has("first_feed") && this.age > 10) {
+                    this.achievements.add("first_feed");
+                    this.showAchievement("🏆 First Steps! You've been caring for your pet!");
+                }
+                
+                if (!this.achievements.has("happy_pet") && this.happiness >= 90) {
+                    this.achievements.add("happy_pet");
+                    this.showAchievement("🌟 Happy Pet! Your pet is extremely happy!");
+                }
+                
+                if (!this.achievements.has("healthy_pet") && this.health >= 95) {
+                    this.achievements.add("healthy_pet");
+                    this.showAchievement("💪 Healthy Pet! Your pet is in perfect health!");
+                }
+                
+                if (!this.achievements.has("elder") && this.stage === "Elder") {
+                    this.achievements.add("elder");
+                    this.showAchievement("👑 Elder Master! You've raised a wise elder pet!");
+                }
+            }
+
+            feed() {
+                if (!this.isAlive || this.isSleeping) return false;
+                
+                this.hunger = Math.min(100, this.hunger + 25);
+                if (this.hunger > 95) {
+                    this.happiness = Math.max(0, this.happiness - 5); // Overfeeding
+                    this.showMessage("I'm too full! 🤢");
+                } else {
+                    this.happiness = Math.min(100, this.happiness + 5);
+                    this.showMessage(this.getRandomMessage("happy"));
+                }
+                return true;
+            }
+
+            play() {
+                if (!this.isAlive || this.isSleeping || this.energy < 15) return false;
+                
+                this.happiness = Math.min(100, this.happiness + 20);
+                this.energy = Math.max(0, this.energy - 15);
+                this.showMessage(this.getRandomMessage("playing"));
+                
+                // Add happy animation
+                document.getElementById('pet').classList.add('happy');
+                setTimeout(() => {
+                    document.getElementById('pet').classList.remove('happy');
+                }, 1000);
+                
+                return true;
+            }
+
+            toggleSleep() {
+                if (!this.isAlive) return false;
+                
+                this.isSleeping = !this.isSleeping;
+                if (this.isSleeping) {
+                    this.showMessage(this.getRandomMessage("sleeping"));
+                } else {
+                    this.showMessage("Good morning! 🌅");
+                }
+                return true;
+            }
+
+            clean() {
+                if (!this.isAlive || this.isSleeping) return false;
+                
+                this.lastClean = Date.now();
+                this.happiness = Math.min(100, this.happiness + 10);
+                this.health = Math.min(100, this.health + 5);
+                this.showMessage(this.getRandomMessage("clean"));
+                return true;
+            }
+
+            getRandomMessage(category) {
+                const messages = this.statusMessages[category];
+                return messages[Math.floor(Math.random() * messages.length)];
+            }
+
+            showMessage(message) {
+                document.getElementById('statusMessage').textContent = message;
+                setTimeout(() => {
+                    this.updateStatusMessage();
+                }, 3000);
+            }
+
+            showAchievement(message) {
+                const achievementArea = document.getElementById('achievementArea');
+                const achievement = document.createElement('div');
+                achievement.className = 'achievement';
+                achievement.textContent = message;
+                achievementArea.appendChild(achievement);
+                
+                setTimeout(() => {
+                    achievementArea.removeChild(achievement);
+                }, 4000);
+            }
+
+            showGameOver() {
+                const gameOverScreen = document.getElementById('gameOverScreen');
+                const gameOverMessage = document.getElementById('gameOverMessage');
+                
+                if (this.health <= 0) {
+                    gameOverMessage.textContent = "Your pet became too unhealthy and passed away. Take better care next time!";
+                } else {
+                    gameOverMessage.textContent = "Your pet ran away due to neglect. Try to keep their needs met!";
+                }
+                
+                gameOverScreen.style.display = 'block';
+            }
+
+            updateStatusMessage() {
+                if (!this.isAlive) return;
+                
+                let message = "I'm doing well! 😊";
+                
+                if (this.isSleeping) {
+                    message = this.getRandomMessage("sleeping");
+                } else if (this.health < 30) {
+                    message = this.getRandomMessage("sick");
+                } else if (this.hunger < 30) {
+                    message = this.getRandomMessage("hungry");
+                } else if (this.energy < 30) {
+                    message = this.getRandomMessage("tired");
+                } else if (this.happiness > 80) {
+                    message = this.getRandomMessage("happy");
+                }
+                
+                document.getElementById('statusMessage').textContent = message;
+            }
+        }
+
+        // Game instance
+        let pet = new VirtualPet();
+        let gameInterval;
+
+        function startGame() {
+            gameInterval = setInterval(() => {
+                pet.tick();
+                updateDisplay();
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            // Update stats
+            document.getElementById('hungerBar').style.width = pet.hunger + '%';
+            document.getElementById('hungerBar').textContent = Math.round(pet.hunger);
+            
+            document.getElementById('energyBar').style.width = pet.energy + '%';
+            document.getElementById('energyBar').textContent = Math.round(pet.energy);
+            
+            document.getElementById('happinessBar').style.width = pet.happiness + '%';
+            document.getElementById('happinessBar').textContent = Math.round(pet.happiness);
+            
+            document.getElementById('healthBar').style.width = pet.health + '%';
+            document.getElementById('healthBar').textContent = Math.round(pet.health);
+
+            // Update pet appearance
+            const petElement = document.getElementById('pet');
+            const stageData = pet.stages[pet.stage];
+            petElement.textContent = stageData.emoji;
+            
+            // Update stage info
+            document.getElementById('stageInfo').textContent = pet.stage;
+            
+            // Update growth progress
+            const currentStageData = pet.stages[pet.stage];
+            const nextThreshold = currentStageData.nextStage ? 
+                pet.stages[currentStageData.nextStage].ageThreshold : pet.age;
+            const progress = currentStageData.nextStage ? 
+                Math.min(100, ((pet.age - currentStageData.ageThreshold) / 50) * 100) : 100;
+            
+            document.getElementById('growthBar').style.width = progress + '%';
+
+            // Update pet animations based on state
+            petElement.className = 'pet';
+            if (pet.energy < 30) petElement.classList.add('tired');
+            if (pet.hunger < 30) petElement.classList.add('hungry');
+
+            // Update sleeping overlay
+            const sleepingOverlay = document.getElementById('sleepingOverlay');
+            sleepingOverlay.style.display = pet.isSleeping ? 'flex' : 'none';
+
+            // Update button states
+            const feedBtn = document.getElementById('feedBtn');
+            const playBtn = document.getElementById('playBtn');
+            const sleepBtn = document.getElementById('sleepBtn');
+            const cleanBtn = document.getElementById('cleanBtn');
+
+            feedBtn.disabled = !pet.isAlive || pet.isSleeping;
+            playBtn.disabled = !pet.isAlive || pet.isSleeping || pet.energy < 15;
+            sleepBtn.disabled = !pet.isAlive;
+            cleanBtn.disabled = !pet.isAlive || pet.isSleeping;
+
+            sleepBtn.textContent = pet.isSleeping ? '⏰ Wake Up' : '🛏️ Sleep';
+
+            pet.updateStatusMessage();
+        }
+
+        function feedPet() {
+            if (pet.feed()) {
+                // Visual feedback
+                const button = document.getElementById('feedBtn');
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 100);
+            }
+        }
+
+        function playWithPet() {
+            if (pet.play()) {
+                // Visual feedback
+                const button = document.getElementById('playBtn');
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 100);
+            }
+        }
+
+        function toggleSleep() {
+            if (pet.toggleSleep()) {
+                // Visual feedback
+                const button = document.getElementById('sleepBtn');
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 100);
+            }
+        }
+
+        function cleanPet() {
+            if (pet.clean()) {
+                // Visual feedback
+                const button = document.getElementById('cleanBtn');
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 100);
+            }
+        }
+
+        function restartGame() {
+            clearInterval(gameInterval);
+            pet = new VirtualPet();
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('achievementArea').innerHTML = '';
+            startGame();
+            updateDisplay();
+        }
+
+        // Start the game
+        startGame();
+        updateDisplay();
+    </script>
+</body>
+</html>
